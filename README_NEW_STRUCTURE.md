@@ -184,7 +184,7 @@ maya-llm/
 #### 语音对话
 ```
 1. 点击 🎙️ 录音按钮
-2. 说话："站起来，今天天气怎么样？"
+2. 说话："yaya，今天天气怎么样？"
 3. 再次点击 🎙️ 停止
 4. 点击"📤 发送"
 5. 收到文字和语音回复
@@ -295,7 +295,7 @@ pytest --cov=src tests/
 from src.backend.audio_utils import check_wake_word
 
 def test_wake_word():
-    assert check_wake_word("站起来你好", "站起来") == True
+    assert check_wake_word("yaya你好", "yaya") == True
 ```
 
 ---

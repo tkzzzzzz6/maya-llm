@@ -37,24 +37,41 @@ def extract_chinese_and_convert_to_pinyin(input_string):
     
     return pinyin_text
 
-def check_wake_word(text, wake_word="站起来"):
+def check_wake_word(text, wake_word="yaya"):
     """
-    检查唤醒词
-    
+    检查唤醒词（支持中英文）
+
     Args:
         text: 输入文本
         wake_word: 唤醒词
-        
+
     Returns:
         bool: 是否包含唤醒词
     """
+    if not text or not wake_word:
+        return False
+
+    # 转换为小写进行比较
+    text_lower = text.lower()
+    wake_word_lower = wake_word.lower()
+
+    # 1. 直接匹配（英文或拼音）
+    if wake_word_lower in text_lower:
+        return True
+
+    # 2. 拼音匹配（中文）
     text_pinyin = extract_chinese_and_convert_to_pinyin(text)
     wake_word_pinyin = extract_chinese_and_convert_to_pinyin(wake_word)
-    
-    wake_word_pinyin = wake_word_pinyin.replace(" ", "")
-    text_pinyin = text_pinyin.replace(" ", "")
-    
-    return wake_word_pinyin in text_pinyin
+
+    if text_pinyin and wake_word_pinyin:
+        # 去除空格进行匹配
+        text_pinyin_clean = text_pinyin.replace(" ", "")
+        wake_word_pinyin_clean = wake_word_pinyin.replace(" ", "")
+
+        if wake_word_pinyin_clean in text_pinyin_clean:
+            return True
+
+    return False
 
 def get_audio_duration(audio_file):
     """

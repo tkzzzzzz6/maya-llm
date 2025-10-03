@@ -344,8 +344,8 @@ import pytest
 from src.backend.audio_utils import check_wake_word
 
 def test_wake_word_detection():
-    assert check_wake_word("站起来，你好", "站起来") == True
-    assert check_wake_word("你好", "站起来") == False
+    assert check_wake_word("yaya，你好", "yaya") == True
+    assert check_wake_word("你好", "yaya") == False
 
 # tests/test_memory.py
 from src.backend.memory import ChatMemory

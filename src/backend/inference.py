@@ -78,13 +78,29 @@ class InferenceEngine:
                 language="auto",
                 use_itn=False,
             )
-            
-            text = res[0]['text'].split(">")[-1]
-            return text
-            
+
+            # 检查返回结果
+            if not res or len(res) == 0:
+                print("语音识别返回空结果")
+                return ""
+
+            # 安全地提取文本
+            if isinstance(res, list) and len(res) > 0:
+                if isinstance(res[0], dict) and 'text' in res[0]:
+                    text = res[0]['text']
+                    # 处理可能的格式标记
+                    if ">" in text:
+                        text = text.split(">")[-1]
+                    return text.strip()
+
+            print(f"语音识别返回格式异常: {res}")
+            return ""
+
         except Exception as e:
-            print(f"语音识别失败: {e}")
-            return f"识别失败: {str(e)}"
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"语音识别失败:\n{error_details}")
+            return ""
     
     def verify_speaker(self, audio_file, threshold=0.35):
         """
@@ -156,7 +172,7 @@ class InferenceEngine:
         
         # 2. 关键词唤醒检测
         if settings.get("enable_kws", False):
-            wake_word = settings.get("wake_word", "站起来")
+            wake_word = settings.get("wake_word", "yaya")
             if not check_wake_word(user_text, wake_word):
                 error_msg = f"⚠️ 未检测到唤醒词「{wake_word}」"
                 history[-1] = (user_text, error_msg)

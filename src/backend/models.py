@@ -95,7 +95,10 @@ class MayaModels:
             yield "✅ 所有模型加载成功！可以开始对话了"
             
         except Exception as e:
-            yield f"❌ 模型加载失败: {str(e)}"
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"模型加载错误详情：\n{error_details}")
+            yield f"❌ 模型加载失败: {str(e)}\n\n请检查终端查看详细错误信息"
     
     def is_loaded(self):
         """检查模型是否已加载"""

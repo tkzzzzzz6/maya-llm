@@ -1,208 +1,235 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-前端UI界面
-Frontend UI
+前端UI界面 - Claude 风格
+Frontend UI - Claude Style
 """
 
 import gradio as gr
-from .styles import MODERN_CSS
+from .styles import CLAUDE_CSS
 from ..backend.models import maya_models
 from ..backend.inference import inference_engine
 from ..backend.config import DEFAULT_SETTINGS
 
-def create_modern_ui():
-    """创建现代化界面"""
-    
-    with gr.Blocks(css=MODERN_CSS, theme=gr.themes.Soft(), title="麻鸭语音助手") as demo:
-        
+def create_claude_ui():
+    """创建 Claude 风格界面"""
+
+    # 使用自定义主题
+    custom_theme = gr.themes.Soft(
+        primary_hue="orange",
+        secondary_hue="stone",
+        neutral_hue="stone",
+        font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"],
+    ).set(
+        body_background_fill="*neutral_50",
+        body_background_fill_dark="*neutral_950",
+        button_primary_background_fill="#CC785C",
+        button_primary_background_fill_hover="#E69A7B",
+        button_primary_text_color="white",
+        input_background_fill="white",
+        input_background_fill_dark="*neutral_800",
+    )
+
+    with gr.Blocks(css=CLAUDE_CSS, theme=custom_theme, title="麻鸭语音助手 - Claude 风格") as demo:
+
         # 隐藏的设置状态
         settings_state = gr.State(DEFAULT_SETTINGS.copy())
-        
-        # 标题栏
+        sidebar_visible = gr.State(True)
+
+        # 顶部导航栏
         gr.HTML("""
-        <div class="header-bar">
-            <h1 class="header-title">
-                <span>🦆</span>
-                <span>麻鸭语音助手</span>
-            </h1>
-            <p class="header-subtitle">
-                Maya Voice Assistant - 基于 SenseVoice + CAM++ + Qwen2.5 + Edge TTS
-            </p>
+        <div class="claude-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <span class="logo-icon">🦆</span>
+                    <span class="logo-text">麻鸭语音助手</span>
+                </div>
+                <div class="header-actions">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary);">
+                        Claude Style · AI Voice Assistant
+                    </span>
+                </div>
+            </div>
         </div>
         """)
-        
-        with gr.Row():
-            # 左侧 - 主聊天区
-            with gr.Column(scale=3):
-                # 聊天界面
+
+        # 主布局区域
+        with gr.Row(elem_classes="main-container"):
+            # 左侧 - 聊天区
+            with gr.Column(elem_classes="chat-section", scale=3):
+                # 聊天记录容器
                 chatbot = gr.Chatbot(
                     label="",
-                    height=600,
+                    height=550,
                     show_copy_button=True,
                     bubble_full_width=False,
-                    avatar_images=(None, "🦆"),
-                    elem_classes="chatbot-container"
+                    avatar_images=("👤", "🦆"),
+                    elem_classes="chat-container"
                 )
-                
-                # 输入区
-                with gr.Row():
-                    with gr.Column(scale=4):
-                        msg = gr.Textbox(
-                            label="",
-                            placeholder="💬 输入消息... (支持文字和语音)",
-                            show_label=False,
-                            container=False
+
+                # 输入区域
+                with gr.Group(elem_classes="input-section"):
+                    msg = gr.Textbox(
+                        label="",
+                        placeholder="发送消息给麻鸭... (支持文字和语音，按 Enter 发送)",
+                        show_label=False,
+                        container=False,
+                        lines=3,
+                        max_lines=10,
+                        elem_classes="input-box"
+                    )
+
+                    with gr.Row(elem_classes="input-actions"):
+                        # 左侧控制按钮
+                        with gr.Row():
+                            audio_input = gr.Audio(
+                                source="microphone",
+                                type="filepath",
+                                label="",
+                                elem_id="voice-input",
+                                visible=False
+                            )
+                            record_btn = gr.Button("🎙️ 录音", size="sm", elem_classes="btn-claude btn-secondary")
+                            clear_btn = gr.Button("🗑️ 清空", size="sm", elem_classes="btn-claude btn-ghost")
+
+                        # 右侧发送按钮
+                        send_btn = gr.Button(
+                            "发送 ↑",
+                            variant="primary",
+                            size="sm",
+                            elem_classes="btn-claude btn-primary"
                         )
-                    with gr.Column(scale=1, min_width=100):
-                        # 修复：使用 Gradio 3.x 兼容的参数
-                        audio_input = gr.Audio(
-                            source="microphone",
-                            type="filepath",
-                            label="🎙️ 录音",
-                            elem_classes="audio-record-btn"
-                        )
-                
+
+                # 音频播放区（隐藏式）
+                audio_output = gr.Audio(label="", autoplay=True, visible=False)
+
+                # 状态提示
                 with gr.Row():
-                    send_btn = gr.Button("📤 发送", variant="primary", size="lg", elem_classes="primary-btn")
-                    clear_btn = gr.Button("🗑️ 清空", size="lg")
-                
-                # 音频播放
-                audio_output = gr.Audio(label="🔊 语音回复", autoplay=True, visible=True)
-                
-                # 使用提示
-                gr.Markdown("""
-                💡 **使用提示**: 
-                - 文字输入：直接打字即可
-                - 语音输入：点击🎙️录音按钮，说话后再次点击停止，然后点击发送
-                - 如需唤醒词/声纹验证，请在右侧设置中启用
-                """)
-            
-            # 右侧 - 设置和功能区
-            with gr.Column(scale=1):
-                with gr.Tabs():
-                    # Tab 1: 快速设置
-                    with gr.Tab("⚙️ 设置"):
-                        gr.Markdown("### 🎛️ 快速设置")
-                        
-                        with gr.Group():
-                            gr.Markdown("#### 模型加载")
-                            load_btn = gr.Button("🚀 加载模型", variant="primary", size="sm")
-                            load_status = gr.Markdown("⏳ 请先加载模型")
-                        
-                        gr.Markdown("---")
-                        
-                        with gr.Group():
-                            gr.Markdown("#### 对话设置")
-                            enable_kws = gr.Checkbox(label="🔑 关键词唤醒", value=False)
-                            wake_word = gr.Textbox(
-                                label="唤醒词",
-                                value="站起来",
-                                placeholder="输入唤醒词"
-                            )
-                            
-                            enable_sv = gr.Checkbox(label="👤 声纹验证", value=False)
-                            sv_threshold = gr.Slider(
-                                minimum=0.1,
-                                maximum=0.9,
-                                value=0.35,
-                                step=0.05,
-                                label="验证阈值"
-                            )
-                            
-                            enable_tts = gr.Checkbox(label="🔊 语音合成", value=True)
-                        
-                        gr.Markdown("---")
-                        
-                        with gr.Group():
-                            gr.Markdown("#### AI 人设")
-                            system_prompt = gr.Textbox(
-                                label="系统提示词",
-                                value=DEFAULT_SETTINGS["system_prompt"],
-                                lines=4
-                            )
-                    
-                    # Tab 2: 声纹注册
-                    with gr.Tab("👤 声纹"):
-                        gr.Markdown("### 🎙️ 声纹注册")
-                        gr.Markdown("录制 3-10 秒清晰语音\n\n建议说：\"你好，我是[你的名字]，这是我的声纹\"")
-                        
+                    status_display = gr.Markdown(
+                        '<div class="status-badge status-loading"><span class="status-dot"></span>请先加载模型</div>',
+                        elem_classes="mt-sm"
+                    )
+
+            # 右侧 - 设置侧边栏
+            with gr.Column(elem_classes="sidebar-section", scale=1):
+                # 侧边栏头部
+                gr.HTML('<div class="sidebar-header"><h3 class="sidebar-title">设置</h3></div>')
+
+                with gr.Column(elem_classes="sidebar-content"):
+                    # 模型加载区
+                    with gr.Group(elem_classes="settings-group"):
+                        gr.Markdown('<p class="settings-label">模型管理</p>')
+                        load_btn = gr.Button(
+                            "🚀 加载所有模型",
+                            variant="primary",
+                            elem_classes="btn-claude btn-primary",
+                            size="sm"
+                        )
+                        load_status = gr.Markdown("")
+
+                    # 对话控制
+                    with gr.Group(elem_classes="settings-group"):
+                        gr.Markdown('<p class="settings-label">对话控制</p>')
+
+                        enable_kws = gr.Checkbox(
+                            label="🔑 关键词唤醒",
+                            value=False,
+                            info="启用后需说唤醒词才响应"
+                        )
+                        wake_word = gr.Textbox(
+                            label="唤醒词",
+                            value="yaya",
+                            placeholder="例如：yaya",
+                            scale=1
+                        )
+
+                        enable_sv = gr.Checkbox(
+                            label="👤 声纹验证",
+                            value=False,
+                            info="仅注册用户可使用"
+                        )
+                        sv_threshold = gr.Slider(
+                            minimum=0.1,
+                            maximum=0.9,
+                            value=0.35,
+                            step=0.05,
+                            label="验证阈值",
+                            info="越高越严格"
+                        )
+
+                        enable_tts = gr.Checkbox(
+                            label="🔊 语音合成",
+                            value=True,
+                            info="自动播放语音回复"
+                        )
+
+                    # AI 人设
+                    with gr.Group(elem_classes="settings-group"):
+                        gr.Markdown('<p class="settings-label">AI 人设</p>')
+                        system_prompt = gr.Textbox(
+                            label="系统提示词",
+                            value=DEFAULT_SETTINGS["system_prompt"],
+                            lines=5,
+                            placeholder="自定义 AI 的性格和行为...",
+                            info="定义 AI 的身份和风格"
+                        )
+
+                    # 声纹注册
+                    with gr.Group(elem_classes="settings-group"):
+                        gr.Markdown('<p class="settings-label">声纹注册</p>')
+                        gr.Markdown(
+                            "录制 3-10 秒清晰语音\n\n💡 建议说：\"你好，我是[名字]，这是我的声纹\"",
+                            elem_classes="text-secondary"
+                        )
                         voiceprint_audio = gr.Audio(
                             source="microphone",
                             type="filepath",
                             label="录制音频"
                         )
-                        register_btn = gr.Button("✅ 注册声纹", variant="primary")
+                        register_btn = gr.Button(
+                            "✅ 注册声纹",
+                            elem_classes="btn-claude btn-primary",
+                            size="sm"
+                        )
                         register_status = gr.Markdown("")
-                    
-                    # Tab 3: 帮助
-                    with gr.Tab("❓ 帮助"):
+
+                    # 快捷帮助
+                    with gr.Accordion("📖 使用指南", open=False):
                         gr.Markdown("""
-                        ### 📖 快速开始
-                        
-                        #### 1️⃣ 加载模型
-                        点击"设置"→"🚀 加载模型"
-                        
-                        #### 2️⃣ 开始对话
-                        **文字对话**（最简单）
-                        - 直接输入文字
-                        - 点击"发送"
-                        
-                        **语音对话**
-                        - 点击🎙️录音按钮
-                        - 说话（自动开始录音）
-                        - 再次点击按钮停止
-                        - 点击"发送"
-                        
-                        #### 3️⃣ 高级功能
-                        **唤醒词**
-                        - 开启后需说"站起来，[问题]"
-                        - 可自定义唤醒词
-                        
-                        **声纹验证**
-                        - 先在"声纹"标签注册
-                        - 开启后仅注册用户可用
-                        
-                        ---
-                        
-                        ### 💡 常见问题
-                        
-                        **Q: 录音没反应？**
-                        - 检查麦克风权限
-                        - 浏览器需允许录音
-                        - 点击🎙️开始，再次点击停止
-                        
-                        **Q: 没有声音回复？**
-                        - 检查是否开启"语音合成"
-                        - 检查系统音量
-                        
-                        **Q: 模型加载慢？**
-                        - 首次需下载约2-3GB
-                        - 耐心等待1-3分钟
-                        """)
-        
-        # 底部功能特性展示
-        gr.Markdown("---")
-        gr.Markdown("### ✨ 核心功能")
-        
+                        **快速开始**
+                        1. 点击 "🚀 加载所有模型"
+                        2. 等待 1-3 分钟完成加载
+                        3. 在输入框输入消息
+                        4. 按 Enter 或点击 "发送 ↑"
+
+                        **高级功能**
+                        - **唤醒词**: 说 "yaya，你的问题"
+                        - **声纹**: 先注册，再启用验证
+                        - **语音**: 点击 🎙️ 录音按钮
+
+                        **快捷键**
+                        - `Enter`: 发送消息
+                        - `Shift + Enter`: 换行
+                        - `Esc`: 取消当前操作
+                        """, elem_classes="text-sm")
+
+        # 页脚 - 移到最外层
         with gr.Row():
-            gr.HTML('<div class="feature-card"><div class="feature-icon">🎙️</div><div class="feature-title">语音识别</div><div class="feature-description">SenseVoice 高精度识别</div></div>')
-            gr.HTML('<div class="feature-card"><div class="feature-icon">🤖</div><div class="feature-title">智能对话</div><div class="feature-description">Qwen2.5 上下文记忆</div></div>')
-            gr.HTML('<div class="feature-card"><div class="feature-icon">👤</div><div class="feature-title">声纹识别</div><div class="feature-description">CAM++ 专属验证</div></div>')
-            gr.HTML('<div class="feature-card"><div class="feature-icon">🔊</div><div class="feature-title">语音合成</div><div class="feature-description">Edge TTS 多语种</div></div>')
-        
-        # 页脚
-        gr.Markdown("""
-        ---
-        <div style="text-align: center; color: #666; padding: 1rem;">
-            🦆 麻鸭语音助手 v2.0 | Powered by ModelScope & Gradio | Made with ❤️
-        </div>
-        """)
+            gr.HTML("""
+            <div style="text-align: center; padding: 2rem; color: var(--text-tertiary); font-size: 0.875rem; width: 100%;">
+                <p style="margin: 0;">🦆 麻鸭语音助手 v3.0 · Claude Style Edition</p>
+                <p style="margin: 0.5rem 0 0 0;">
+                    基于 SenseVoice + Qwen2.5 + CAM++ + Edge TTS |
+                    <a href="https://github.com" style="color: var(--claude-orange); text-decoration: none;">GitHub</a>
+                </p>
+            </div>
+            """)
         
         # ========== 事件绑定 ==========
-        
+
         # 更新设置
         def update_settings(kws, word, sv, threshold, tts, prompt):
+            """动态更新设置状态"""
             settings = DEFAULT_SETTINGS.copy()
             settings.update({
                 "enable_kws": kws,
@@ -213,55 +240,104 @@ def create_modern_ui():
                 "system_prompt": prompt
             })
             return settings
-        
+
         for component in [enable_kws, wake_word, enable_sv, sv_threshold, enable_tts, system_prompt]:
             component.change(
                 fn=update_settings,
                 inputs=[enable_kws, wake_word, enable_sv, sv_threshold, enable_tts, system_prompt],
                 outputs=settings_state
             )
-        
-        # 发送消息
-        send_btn.click(
-            fn=inference_engine.chat_respond,
-            inputs=[msg, chatbot, audio_input, settings_state],
-            outputs=[chatbot, audio_output]
-        ).then(
-            lambda: ("", None),
-            outputs=[msg, audio_input]
-        )
-        
-        msg.submit(
-            fn=inference_engine.chat_respond,
-            inputs=[msg, chatbot, audio_input, settings_state],
-            outputs=[chatbot, audio_output]
-        ).then(
-            lambda: ("", None),
-            outputs=[msg, audio_input]
-        )
-        
+
         # 清空对话
         def clear_history():
+            """清空对话历史"""
             maya_models.clear_memory()
-            return [], None
-        
+            return [], None, '<div class="status-badge status-success"><span class="status-dot"></span>对话已清空</div>'
+
         clear_btn.click(
             fn=clear_history,
-            outputs=[chatbot, audio_output]
+            outputs=[chatbot, audio_output, status_display]
         )
-        
-        # 加载模型
+
+        # 加载模型 - 增强状态显示
+        def load_models_with_status():
+            """加载模型并更新状态"""
+            for status in maya_models.load_models():
+                # 根据状态返回不同的显示
+                if "加载中" in status or "正在" in status:
+                    yield status, f'<div class="status-badge status-loading"><div class="loading-spinner"></div>{status}</div>'
+                elif "成功" in status:
+                    yield status, f'<div class="status-badge status-success"><span class="status-dot"></span>{status}</div>'
+                elif "失败" in status or "错误" in status:
+                    yield status, f'<div class="status-badge status-error">❌ {status}</div>'
+                else:
+                    yield status, f'<div class="status-badge status-loading"><span class="status-dot"></span>{status}</div>'
+
         load_btn.click(
-            fn=maya_models.load_models,
-            outputs=load_status
+            fn=load_models_with_status,
+            outputs=[load_status, status_display]
         )
-        
+
+        # 发送消息 - 优化流式输出
+        def send_message(user_msg, history, audio, settings):
+            """发送消息并获取回复"""
+            # 调用推理引擎
+            updated_history, audio_response = inference_engine.chat_respond(
+                user_msg, history, audio, settings
+            )
+            return updated_history, audio_response
+
+        # Enter 键发送
+        msg.submit(
+            fn=send_message,
+            inputs=[msg, chatbot, audio_input, settings_state],
+            outputs=[chatbot, audio_output]
+        ).then(
+            lambda: ("", None, '<div class="status-badge status-success"><span class="status-dot"></span>就绪</div>'),
+            outputs=[msg, audio_input, status_display]
+        )
+
+        # 点击发送按钮
+        send_btn.click(
+            fn=send_message,
+            inputs=[msg, chatbot, audio_input, settings_state],
+            outputs=[chatbot, audio_output]
+        ).then(
+            lambda: ("", None, '<div class="status-badge status-success"><span class="status-dot"></span>就绪</div>'),
+            outputs=[msg, audio_input, status_display]
+        )
+
+        # 录音按钮切换
+        def toggle_recording(visible):
+            """切换录音界面"""
+            return not visible
+
+        record_btn.click(
+            fn=toggle_recording,
+            inputs=[audio_input],
+            outputs=[audio_input]
+        )
+
         # 注册声纹
+        def register_voiceprint_with_feedback(audio):
+            """注册声纹并提供反馈"""
+            result = inference_engine.register_voiceprint(audio)
+            if "成功" in result:
+                return result, f'<div class="status-badge status-success">✅ 声纹已注册</div>'
+            else:
+                return result, f'<div class="status-badge status-error">❌ 注册失败</div>'
+
         register_btn.click(
-            fn=inference_engine.register_voiceprint,
+            fn=register_voiceprint_with_feedback,
             inputs=voiceprint_audio,
-            outputs=register_status
+            outputs=[register_status, status_display]
         )
-    
+
     return demo
+
+
+# 兼容旧函数名
+def create_modern_ui():
+    """兼容旧版函数名"""
+    return create_claude_ui()
 
