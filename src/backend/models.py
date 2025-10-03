@@ -44,53 +44,68 @@ class MayaModels:
         try:
             # 1. 加载 SenseVoice ASR 模型
             yield "📥 正在加载语音识别模型 (SenseVoice)..."
-            if progress:
-                progress(0.2)
-            
+            try:
+                if progress is not None:
+                    progress(0.2)
+            except:
+                pass
+
             self.asr_model = AutoModel(
                 model=MODEL_CONFIG["asr"]["model_id"],
                 trust_remote_code=MODEL_CONFIG["asr"]["trust_remote_code"]
             )
-            
+
             # 2. 加载 CAM++ 声纹识别模型
             yield "📥 正在加载声纹识别模型 (CAM++)..."
-            if progress:
-                progress(0.4)
-            
+            try:
+                if progress is not None:
+                    progress(0.4)
+            except:
+                pass
+
             self.sv_pipeline = pipeline(
                 task=MODEL_CONFIG["sv"]["task"],
                 model=MODEL_CONFIG["sv"]["model_id"],
                 model_revision=MODEL_CONFIG["sv"]["model_revision"]
             )
-            
+
             # 3. 加载 Qwen2.5 大语言模型
             yield "📥 正在加载大语言模型 (Qwen2.5-1.5B)..."
-            if progress:
-                progress(0.6)
-            
+            try:
+                if progress is not None:
+                    progress(0.6)
+            except:
+                pass
+
             qwen_local_dir = snapshot_download(
                 model_id=MODEL_CONFIG["llm"]["model_id"]
             )
-            
+
             yield "🔄 初始化大语言模型..."
-            if progress:
-                progress(0.8)
-            
+            try:
+                if progress is not None:
+                    progress(0.8)
+            except:
+                pass
+
             self.llm_model = AutoModelForCausalLM.from_pretrained(
                 qwen_local_dir,
                 torch_dtype=MODEL_CONFIG["llm"]["torch_dtype"],
                 device_map=MODEL_CONFIG["llm"]["device_map"],
                 trust_remote_code=MODEL_CONFIG["llm"]["trust_remote_code"]
             )
-            
+
             self.llm_tokenizer = AutoTokenizer.from_pretrained(
                 qwen_local_dir,
                 trust_remote_code=MODEL_CONFIG["llm"]["trust_remote_code"]
             )
-            
-            if progress:
-                progress(1.0)
-            
+
+            try:
+                if progress is not None:
+                    progress(1.0)
+            except:
+                pass
+
             self.models_loaded = True
             yield "✅ 所有模型加载成功！可以开始对话了"
             

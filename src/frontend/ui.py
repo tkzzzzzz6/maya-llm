@@ -280,12 +280,12 @@ def create_claude_ui():
 
         # 发送消息 - 优化流式输出
         def send_message(user_msg, history, audio, settings):
-            """发送消息并获取回复"""
-            # 调用推理引擎
-            updated_history, audio_response = inference_engine.chat_respond(
+            """发送消息并获取回复（流式输出）"""
+            # 调用推理引擎生成器
+            for updated_history, audio_response in inference_engine.chat_respond(
                 user_msg, history, audio, settings
-            )
-            return updated_history, audio_response
+            ):
+                yield updated_history, audio_response
 
         # Enter 键发送
         msg.submit(
