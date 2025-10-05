@@ -43,6 +43,7 @@
 ## 结合AI前端基础版本
 
 ```bash
+npm install
 sh start_app.sh
 ```
 
