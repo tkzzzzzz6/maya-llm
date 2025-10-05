@@ -52,3 +52,8 @@ pretrained_models/*
 *.mp3
 
 # AI
+.cursor
+.claude
+CLAUDE.md
+
+output

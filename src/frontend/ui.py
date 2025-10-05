@@ -117,101 +117,122 @@ def create_claude_ui():
 
                 with gr.Column(elem_classes="sidebar-content"):
                     # 模型加载区
-                    with gr.Group(elem_classes="settings-group"):
-                        gr.Markdown('<p class="settings-label">模型管理</p>')
+                    with gr.Group(elem_classes="settings-group modern-card"):
+                        gr.HTML('<div class="settings-label-icon">🚀 模型管理</div>')
                         load_btn = gr.Button(
-                            "🚀 加载所有模型",
+                            "加载所有模型",
                             variant="primary",
-                            elem_classes="btn-claude btn-primary",
+                            elem_classes="btn-claude btn-primary btn-full-width",
                             size="sm"
                         )
                         load_status = gr.Markdown("")
 
                     # 对话控制
-                    with gr.Group(elem_classes="settings-group"):
-                        gr.Markdown('<p class="settings-label">对话控制</p>')
+                    with gr.Accordion("🎛️ 对话控制", open=True, elem_classes="settings-accordion"):
+                        with gr.Group(elem_classes="settings-inner-group"):
+                            enable_kws = gr.Checkbox(
+                                label="🔑 关键词唤醒",
+                                value=False,
+                                info="启用后需说唤醒词才响应",
+                                elem_classes="custom-checkbox"
+                            )
+                            wake_word = gr.Textbox(
+                                label="唤醒词",
+                                value="yaya",
+                                placeholder="例如：yaya",
+                                scale=1,
+                                elem_classes="modern-input"
+                            )
 
-                        enable_kws = gr.Checkbox(
-                            label="🔑 关键词唤醒",
-                            value=False,
-                            info="启用后需说唤醒词才响应"
-                        )
-                        wake_word = gr.Textbox(
-                            label="唤醒词",
-                            value="yaya",
-                            placeholder="例如：yaya",
-                            scale=1
-                        )
+                            enable_sv = gr.Checkbox(
+                                label="👤 声纹验证",
+                                value=False,
+                                info="仅注册用户可使用",
+                                elem_classes="custom-checkbox"
+                            )
+                            sv_threshold = gr.Slider(
+                                minimum=0.1,
+                                maximum=0.9,
+                                value=0.35,
+                                step=0.05,
+                                label="验证阈值",
+                                info="越高越严格",
+                                elem_classes="modern-slider"
+                            )
 
-                        enable_sv = gr.Checkbox(
-                            label="👤 声纹验证",
-                            value=False,
-                            info="仅注册用户可使用"
-                        )
-                        sv_threshold = gr.Slider(
-                            minimum=0.1,
-                            maximum=0.9,
-                            value=0.35,
-                            step=0.05,
-                            label="验证阈值",
-                            info="越高越严格"
-                        )
-
-                        enable_tts = gr.Checkbox(
-                            label="🔊 语音合成",
-                            value=True,
-                            info="自动播放语音回复"
-                        )
+                            enable_tts = gr.Checkbox(
+                                label="🔊 语音合成",
+                                value=True,
+                                info="自动播放语音回复",
+                                elem_classes="custom-checkbox"
+                            )
 
                     # AI 人设
-                    with gr.Group(elem_classes="settings-group"):
-                        gr.Markdown('<p class="settings-label">AI 人设</p>')
-                        system_prompt = gr.Textbox(
-                            label="系统提示词",
-                            value=DEFAULT_SETTINGS["system_prompt"],
-                            lines=5,
-                            placeholder="自定义 AI 的性格和行为...",
-                            info="定义 AI 的身份和风格"
-                        )
+                    with gr.Accordion("🤖 AI 人设", open=False, elem_classes="settings-accordion"):
+                        with gr.Group(elem_classes="settings-inner-group"):
+                            system_prompt = gr.Textbox(
+                                label="系统提示词",
+                                value=DEFAULT_SETTINGS["system_prompt"],
+                                lines=5,
+                                placeholder="自定义 AI 的性格和行为...",
+                                info="定义 AI 的身份和风格",
+                                elem_classes="modern-textarea"
+                            )
 
                     # 声纹注册
-                    with gr.Group(elem_classes="settings-group"):
-                        gr.Markdown('<p class="settings-label">声纹注册</p>')
-                        gr.Markdown(
-                            "录制 3-10 秒清晰语音\n\n💡 建议说：\"你好，我是[名字]，这是我的声纹\"",
-                            elem_classes="text-secondary"
-                        )
-                        voiceprint_audio = gr.Audio(
-                            source="microphone",
-                            type="filepath",
-                            label="录制音频"
-                        )
-                        register_btn = gr.Button(
-                            "✅ 注册声纹",
-                            elem_classes="btn-claude btn-primary",
-                            size="sm"
-                        )
-                        register_status = gr.Markdown("")
+                    with gr.Accordion("🎤 声纹注册", open=False, elem_classes="settings-accordion"):
+                        with gr.Group(elem_classes="settings-inner-group"):
+                            gr.Markdown(
+                                "📝 录制 3-10 秒清晰语音\n\n💡 建议说：\"你好，我是[名字]，这是我的声纹\"",
+                                elem_classes="text-secondary text-sm"
+                            )
+                            voiceprint_audio = gr.Audio(
+                                source="microphone",
+                                type="filepath",
+                                label="录制音频",
+                                elem_classes="modern-audio"
+                            )
+                            register_btn = gr.Button(
+                                "✅ 注册声纹",
+                                elem_classes="btn-claude btn-primary btn-full-width",
+                                size="sm"
+                            )
+                            register_status = gr.Markdown("")
 
                     # 快捷帮助
-                    with gr.Accordion("📖 使用指南", open=False):
-                        gr.Markdown("""
-                        **快速开始**
-                        1. 点击 "🚀 加载所有模型"
-                        2. 等待 1-3 分钟完成加载
-                        3. 在输入框输入消息
-                        4. 按 Enter 或点击 "发送 ↑"
+                    with gr.Accordion("📖 使用指南", open=False, elem_classes="settings-accordion help-accordion"):
+                        gr.HTML("""
+                        <div class="help-content">
+                            <div class="help-section">
+                                <h4 class="help-title">⚡ 快速开始</h4>
+                                <ol class="help-list">
+                                    <li>点击 "加载所有模型"</li>
+                                    <li>等待 1-3 分钟完成加载</li>
+                                    <li>在输入框输入消息</li>
+                                    <li>按 Enter 或点击 "发送 ↑"</li>
+                                </ol>
+                            </div>
 
-                        **高级功能**
-                        - **唤醒词**: 说 "yaya，你的问题"
-                        - **声纹**: 先注册，再启用验证
-                        - **语音**: 点击 🎙️ 录音按钮
+                            <div class="help-section">
+                                <h4 class="help-title">🔧 高级功能</h4>
+                                <ul class="help-list">
+                                    <li><strong>唤醒词</strong>: 说 "yaya，你的问题"</li>
+                                    <li><strong>声纹</strong>: 先注册，再启用验证</li>
+                                    <li><strong>语音</strong>: 点击 🎙️ 录音按钮</li>
+                                </ul>
+                            </div>
 
-                        **快捷键**
-                        - `Enter`: 发送消息
-                        - `Shift + Enter`: 换行
-                        - `Esc`: 取消当前操作
-                        """, elem_classes="text-sm")
+                            <div class="help-section">
+                                <h4 class="help-title">⌨️ 快捷键</h4>
+                                <ul class="shortcut-list">
+                                    <li><kbd>Enter</kbd> 发送消息</li>
+                                    <li><kbd>Shift</kbd> + <kbd>Enter</kbd> 换行</li>
+                                    <li><kbd>Ctrl</kbd> + <kbd>K</kbd> 清空对话</li>
+                                    <li><kbd>Esc</kbd> 取消当前操作</li>
+                                </ul>
+                            </div>
+                        </div>
+                        """)
 
         # 页脚 - 移到最外层
         with gr.Row():
