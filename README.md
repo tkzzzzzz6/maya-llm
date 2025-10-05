@@ -1,17 +1,5 @@
 # 环境配置
 
-0. anaconda\ffmpeg安装
-
-```
-    SenseVoiceSmall模型下载：
-        自动下载：设置215行 model_dir = "iic/SenseVoiceSmall"
-        手动下载：https://www.modelscope.cn/models/iic/SenseVoiceSmall/files
-  
-    QWen模型下载：
-        自动下载：设置220行 model_name = "Qwen/Qwen2.5-1.5B-Instruct"，开启科学上网，可从huggingface自动下载
-        手动下载：https://www.modelscope.cn/models/ 搜索QWen，结果中下载显存可支持模型
-```
-
 1. 创建虚拟环境
 
 ```
