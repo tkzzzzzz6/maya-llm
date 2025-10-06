@@ -42,10 +42,8 @@
 
 ## 结合AI前端基础版本
 
-```bash
-npm install
+
 sh start_app.sh
-```
 
 ## 新增声纹识别功能
 
@@ -54,7 +52,7 @@ sh start_app.sh
 
 ## 新增自由定义唤醒词功能
 
-使用SenceVoice的语音识别能力实现，将语音识别的汉字转为拼音进行匹配。将唤醒词/指令词设置为中文对应拼音，可自由定制。15.0_SenceVoice_kws_CAM++.py中默认为'ni hao xiao qian'，15.1_SenceVoice_kws_CAM++.py中默认为'zhan qi lai'[暗影君王实在太cool辣]
+使用SenceVoice的语音识别能力实现，将语音识别的汉字转为拼音进行匹配。将唤醒词/指令词设置为中文对应拼音，可自由定制。
 
 ## 新增对话历史内容记忆功能
 
