@@ -18,14 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-# 配置 CORS，允许所有来源访问
-CORS(app, resources={
-    r"/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    }
-})
+CORS(app)  # 允许跨域请求
 
 OUTPUT_DIR = "./yaya_output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -56,20 +49,6 @@ def initialize_models():
         logger.error(f"模型加载失败: {e}")
         logger.warning("将使用在线 Google STT 作为备用方案")
         return False
-
-@app.route('/', methods=['GET'])
-def index():
-    """根路径"""
-    return jsonify({
-        "service": "YAYA Voice Service",
-        "version": "1.0",
-        "endpoints": {
-            "health": "/health",
-            "stt": "/api/speech-to-text",
-            "tts": "/api/text-to-speech",
-            "voices": "/api/voices"
-        }
-    })
 
 @app.route('/health', methods=['GET'])
 def health_check():

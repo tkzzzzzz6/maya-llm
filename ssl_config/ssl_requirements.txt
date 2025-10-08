@@ -1,0 +1,6 @@
+# SSL/TLS 证书生成依赖
+pyOpenSSL>=23.0.0
+
+# 用于测试 WebSocket 连接（可选）
+websocket-client>=1.6.0
+
